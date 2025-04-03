@@ -4,6 +4,8 @@ from pathlib import Path
 import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
+from model.clean_text import TextCleaner
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,10 +47,16 @@ def analyze_pdf(filename: str) -> dict:
         text = pytesseract.image_to_string(image, config=custom_config)
         
         logger.info("OCR completed successfully")
+        
+        # Clean the OCR text using Claude
+        logger.info("Cleaning text with Claude")
+
+        cleaned_text = TextCleaner.clean_medical_text(text.strip())
+        
         return {
             "filename": filename,
-            "text": text.strip(),
-            "page_count": len(images)
+            "raw_text": text.strip(),
+            "cleaned_text": cleaned_text,
         }
         
     except Exception as e:
