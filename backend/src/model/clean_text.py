@@ -63,15 +63,15 @@ class TextCleaner:
         Here's the text to analyze:
         {text}
 
-        Return only the JSON object, no additional text.
+        Return only the JSON object, no additional text. If any field is not found in the document, use null instead of empty strings.
         """
 
         try:
             # Get Claude's response
             response = claude.messages.create(
                 model="claude-3-opus-20240229",
-                max_tokens=40000,
-                temperature=2,
+                max_tokens=4000,  # Reduced to be within Claude-3's limits
+                temperature=0.2,  # Lower temperature for more consistent JSON output
                 messages=[
                     {
                         "role": "user",
