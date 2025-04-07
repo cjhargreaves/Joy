@@ -1,4 +1,4 @@
-// File: /Users/collinj/Schoolwork/spring2025/sep/b2bsass/frontend/src/app/layout.tsx
+// File: /Users/collinj/Schoolwork/spring2025/sep/b2b/frontend/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
