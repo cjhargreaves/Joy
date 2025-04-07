@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 
-def analyze_pdf(filename: str) -> dict:
+def analyze_pdf(filename: str) -> str: 
     """
     Basic PDF analysis that extracts text from the PDF
     Handles single-page PDFs with improved error handling
@@ -48,16 +48,7 @@ def analyze_pdf(filename: str) -> dict:
         
         logger.info("OCR completed successfully")
         
-        # Clean the OCR text using Claude
-        logger.info("Cleaning text with Claude")
-
-        cleaned_text = TextCleaner.clean_medical_text(text.strip())
-        
-        return {
-            "filename": filename,
-            "raw_text": text.strip(),
-            "cleaned_text": cleaned_text,
-        }
+        return text.strip()
         
     except Exception as e:
         logger.error(f"Error processing PDF: {str(e)}")

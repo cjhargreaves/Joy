@@ -15,12 +15,12 @@ class TextCleaner:
     """Handles cleaning and structuring of OCR text using Claude"""
     
     @staticmethod
-    def clean_medical_text(text: str) -> Dict[str, Any]:
+    def clean_medical_text(texts: list[str]) -> Dict[str, Any]:
         """
-        Process OCR text using Claude to extract structured medical information
+        Process multiple OCR text using Claude to extract structured medical information
         
         Args:
-            text (str): Raw OCR text from the PDF
+            text (list[str]): Raw OCR text from the PDF
             
         Returns:
             Dict[str, Any]: Structured JSON with medical information
@@ -61,7 +61,7 @@ class TextCleaner:
         }}
 
         Here's the text to analyze:
-        {text}
+        {texts}
 
         Return only the JSON object, no additional text. If any field is not found in the document, use null instead of empty strings.
         """
