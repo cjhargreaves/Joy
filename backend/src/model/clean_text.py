@@ -33,7 +33,7 @@ class TextCleaner:
             "document_type": "Type of medical document (e.g., prescription, lab report, clinical notes)",
             "patient_info": {{
                 "name": "Patient's full name if present",
-                "dob": "Date of birth if present",
+                "dob": "Date of birth if present i need it to be in xxxx-xx-xx form",
                 "id": "Any patient ID numbers"
             }},
             "provider_info": {{

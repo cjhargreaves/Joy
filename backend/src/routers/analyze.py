@@ -4,6 +4,7 @@ import os
 import logging
 from ocr.analyze_pdf import analyze_pdf
 from model.clean_text import TextCleaner
+from agents.agent import EMRFormFiller 
 
 router = APIRouter(
     prefix="/analyze",
@@ -59,6 +60,9 @@ async def analyze_pdfs_endpoint():
         # Log the cleaned data
         logger.info("Cleaned Data Structure:")
         logger.info(cleaned_data)
+
+        agent = EMRFormFiller()
+        await agent.fill_form({"cleaned_data": cleaned_data})
         
         return {
             "num_files_processed": len(all_ocr_text),

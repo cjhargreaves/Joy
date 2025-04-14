@@ -1,4 +1,4 @@
-// File: /Users/collinj/Schoolwork/spring2025/sep/b2b/frontend/src/app/upload/page.tsx
+// File: /Users/collinj/Schoolwork/spring2025/sep/Joy/frontend/src/app/upload/page.tsx
 import * as entry from '../../../../src/app/upload/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
