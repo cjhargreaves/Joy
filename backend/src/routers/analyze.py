@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import os
 import logging
-from ocr.analyze_pdf import analyze_pdf
-from model.clean_text import TextCleaner
-from agents.agent import EMRFormFiller 
+from ..ocr.analyze_pdf import analyze_document
+from ..model.clean_text_noAI import TextCleanerNoAI
+from ..agents.agent import EMRFormFiller 
 
 router = APIRouter(
     prefix="/analyze",
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @router.get("/all")
 async def analyze_pdfs_endpoint():
     """
-    Endpoint to analyze multiple PDF files, combine their text, and clean it using Claude
+    Endpoint to analyze multiple PDF files and extract structured information
     """
     try:
         # Construct the path to uploads directory (it's in the backend folder, parallel to src)
@@ -24,49 +24,51 @@ async def analyze_pdfs_endpoint():
         upload_dir = os.path.join(current_dir, "uploads")
         all_ocr_text = []
         
-        # Get all PDF files
-        pdf_files = [f for f in os.listdir(upload_dir)]
+        # Get all files
+        files = [f for f in os.listdir(upload_dir)]
         
-        if not pdf_files:
+        if not files:
             raise HTTPException(
                 status_code=404,
-                detail="No PDF files found in uploads directory"
+                detail="No files found in uploads directory"
             )
             
-        # Process each PDF file
-        for filename in pdf_files:
+        # Process each file
+        for filename in files:
             try:
-                ocr_result = analyze_pdf(filename)
-                # Extract raw_text from OCR result
+                ocr_result = analyze_document(filename)
                 all_ocr_text.append(ocr_result)
                 logger.info(f"Successfully processed {filename}")
             except Exception as e:
                 logger.error(f"Error processing {filename}: {str(e)}")
-
                 continue
                 
         if not all_ocr_text:
             raise HTTPException(
                 status_code=500,
-                detail="Failed to process any PDF files"
+                detail="Failed to process any files"
             )
             
-        # Combine all OCR text with newlines between documents
-        
-        # Clean the combined text using Claude
-        cleaner = TextCleaner()
+        # Clean and structure the text using rule-based parsing
+        cleaner = TextCleanerNoAI()
         cleaned_data = cleaner.clean_medical_text(all_ocr_text)
         
-        # Log the cleaned data
-        logger.info("Cleaned Data Structure:")
+        # Log the structured data
+        logger.info("Structured Data:")
         logger.info(cleaned_data)
 
-        agent = EMRFormFiller()
-        await agent.fill_form({"cleaned_data": cleaned_data})
+        # Optional: Send to EMR form filler
+        try:
+            agent = EMRFormFiller()
+            await agent.fill_form({"cleaned_data": cleaned_data})
+        except Exception as e:
+            logger.error(f"Error filling EMR form: {str(e)}")
+            # Continue even if EMR filling fails
         
         return {
             "num_files_processed": len(all_ocr_text),
-            "cleaned_data": cleaned_data
+            "raw_text": all_ocr_text,  # Include the raw OCR text
+            "structured_data": cleaned_data  # Include the structured data
         }
     except Exception as e:
         logger.error(f"Error in analysis pipeline: {str(e)}")
