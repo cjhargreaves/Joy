@@ -5,14 +5,15 @@ import axios from 'axios';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Replace this with your computer's local IP address
-const API_BASE_URL = 'http://10.23.155.34:8000';
+// Update this with your computer's local IP address
+const API_BASE_URL = 'http://172.16.86.18:8000';
 
 export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [image, setImage] = useState(null);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   if (!permission) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -49,33 +50,69 @@ export default function Home() {
     try {
       setIsUploading(true);
       
+      // Create form data with the correct field name
       const formData = new FormData();
+      
+      // Get the filename from the URI
+      const filename = imageUri.split('/').pop() || 'document.jpg';
+      
+      // Append the file with the correct field name 'files'
       formData.append('files', {
         uri: imageUri,
         type: 'image/jpeg',
-        name: 'document.jpg',
+        name: filename
       });
 
+      console.log('Starting upload...');
+      console.log('Image URI:', imageUri);
       console.log('Uploading to:', `${API_BASE_URL}/upload`);
+      console.log('File name:', filename);
       
-      // Upload the image and get the result ID
       const uploadResponse = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
-
         },
-        timeout: 100000, // Increase timeout to 100 seconds
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: 60000, // Increased to 60 seconds
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`Upload progress: ${percentCompleted}%`);
+          setUploadStatus(`Uploading: ${percentCompleted}%`);
+        },
       });
 
+      console.log('Upload response:', uploadResponse.data);
+      
+      if (uploadResponse.data.files && uploadResponse.data.files.length > 0) {
+        Alert.alert('Success', 'File uploaded successfully!');
+        setImage(null); // Reset the image
+      } else {
+        throw new Error('No files were uploaded');
+      }
+      
     } catch (error) {
       console.error('Upload error details:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        code: error.code,
+        stack: error.stack
       });
+      
+      let errorMessage = 'Failed to upload image. ';
+      if (error.response?.data?.detail) {
+        errorMessage += error.response.data.detail;
+      } else if (error.message.includes('Network Error') || error.code === 'ECONNABORTED') {
+        errorMessage += 'Network error - please check your connection and ensure the server is running.';
+      } else {
+        errorMessage += error.message;
+      }
+      
       Alert.alert(
         'Upload Error',
-        `Failed to upload image. Error: ${error.message}\n .... ${API_BASE_URL} and both devices are on the same network.`
+        `${errorMessage}\n\nPlease make sure your laptop is running the server at ${API_BASE_URL} and both devices are on the same network.`
       );
     } finally {
       setIsUploading(false);
