@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from routers import upload, analyze
+from routers import upload, analyze, ocr
 
 import os
 import pathlib
@@ -21,6 +21,7 @@ app.add_middleware(
 
 app.include_router(upload.router)
 app.include_router(analyze.router)
+app.include_router(ocr.router)
 
 @app.get("/")
 async def home():
