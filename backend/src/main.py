@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import upload, analyze, ocr
+from routers import upload, analyze, ocr
 
 import os
 import pathlib
@@ -26,7 +26,3 @@ app.include_router(ocr.router)
 @app.get("/")
 async def home():
     return {"message": "Welcome"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

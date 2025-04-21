@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 // Update this with your computer's local IP address
-const API_BASE_URL = 'http://172.16.86.18:8000';
+const API_BASE_URL = 'http://10.23.155.34:8000';
 
 export default function Home() {
   const [isUploading, setIsUploading] = useState(false);

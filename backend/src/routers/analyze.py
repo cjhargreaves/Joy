@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import os
 import logging
-from ..ocr.analyze_pdf import analyze_document
-from ..model.clean_text_noAI import TextCleanerNoAI
-from ..agents.agent import EMRFormFiller 
+from ocr.analyze_pdf import analyze_document
+from model.clean_text import TextCleaner
+from agents.agent import EMRFormFiller 
 
 router = APIRouter(
     prefix="/analyze",
@@ -50,7 +50,7 @@ async def analyze_pdfs_endpoint():
             )
             
         # Clean and structure the text using rule-based parsing
-        cleaner = TextCleanerNoAI()
+        cleaner = TextCleaner()
         cleaned_data = cleaner.clean_medical_text(all_ocr_text)
         
         # Log the structured data

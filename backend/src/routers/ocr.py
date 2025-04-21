@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import logging
-from ..ocr.analyze_pdf import analyze_document
+from ocr.analyze_pdf import analyze_document
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
