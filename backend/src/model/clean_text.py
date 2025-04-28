@@ -56,7 +56,7 @@ class TextCleaner:
                     "temperature": "Temp if present"
                 }}
             }},
-            "date_of_service": "Date of service/visit",
+            "date_of_service": "Date of service/visit use xxxx-xx-xx format",
             "additional_notes": "Any other relevant information"
         }}
 

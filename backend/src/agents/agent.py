@@ -1,5 +1,4 @@
-from langchain_anthropic import ChatAnthropic
-from browser_use import Agent
+from playwright.async_api import async_playwright
 import asyncio
 
 # Initialize the model
@@ -9,60 +8,70 @@ class EMRFormFiller:
     
     async def fill_form(self, patient_data):
         """
-        Fill the EMR form with the provided patient data
+        Fill the EMR form with the provided patient data using Playwright
         
         Args:
             patient_data (Dict[str, Any]): JSON data containing patient information
         """
-        # Initialize the model
-        llm = ChatAnthropic(
-            model_name="claude-3-5-sonnet-20240620",
-            temperature=0.0,
-            timeout=100, # Increase for complex tasks
-        )
-
-        initial_actions = [
-            {'open_tab': {'url': self.url}},
-        ]
 
         data = patient_data["cleaned_data"]
 
-        task = f"""
-        please on the opened tab click Create New Patient Intake
-        Then you are now going to use the json passed to input data into this EMR form,
-        These are going to be the field name, index, and the data to put in
-
-        Document Type: {data['document_type']}
-
-        Full Name: {data['patient_info']['name']}
-        Date of Birth: {data['patient_info']['dob']}
-        Patient ID: {data['patient_info']['id']}
-
-        Provider Name: {data['provider_info']['name']}
-        Facility: {data['provider_info']['facility']}
-        Contact: {data['provider_info']['contact']}
-
-        Diagnosis: {data['clinical_info']['diagnosis']}
         
-        Context for adding Medication: Make sure to click Add Medication iteration of the loop
-        Medication Name: {[med['name'] for med in data['clinical_info']['medications']]}
-        Medication Dosage: {[med['dosage'] for med in data['clinical_info']['medications']]}
-        Medication Instructions: {[med['instructions'] for med in data['clinical_info']['medications']]}
+        async with async_playwright() as p:
+            # Launch browser
+            browser = await p.chromium.launch(headless=False)
+            page = await browser.new_page()
+            
+            # Navigate to the URL
+            await page.goto(self.url)
+            
+            # Click Create New Patient Intake button
+            await page.click('text="Create New Patient Record"')
+            
+            # Fill in Document Type
+            await page.fill('#document_type', data['document_type'])
+            
+            # Fill Patient Information
+            await page.fill('#patient_name', data['patient_info']['name'])
+            await page.fill('#patient_dob', data['patient_info']['dob'])
+            await page.fill('#patient_id', data['patient_info']['id'])
 
-        Vital Sign Blood Pressure: {data['clinical_info']['vital_signs']['blood_pressure']}
-        Vital Sign Heart Rate: {data['clinical_info']['vital_signs']['heart_rate']}
-        Vital Sign Temperature: {data['clinical_info']['vital_signs']['temperature']}
-        """
-        # Create agent with the model
-        agent = Agent(
-            task = task,
-            initial_actions = initial_actions,
-            llm=llm
+            # Fill Provider Information
+            await page.fill('#provider_name', data['provider_info']['name'])
+            await page.fill('#provider_facility', data['provider_info']['facility'])
+            await page.fill('#provider_contact', data['provider_info']['contact'])
+            
+            
+            # Fill Clinical Information
+            diagnosis_data = data['clinical_info']['diagnosis']
+            if isinstance(diagnosis_data, list):
+                await page.fill('#diagnosis', "\n".join(diagnosis_data))
+            else:
+                await page.fill('#diagnosis', str(diagnosis_data))
+            
+            # Fill Medications
+            count = 0
+            for medication in data['clinical_info']['medications']:
+                await page.click('text="Add Medication"')
+                await page.fill(f'#med_name_{count}', medication['name'])
+                await page.fill(f'#med_dosage_{count}', medication['dosage'])
+                await page.fill(f'#med_instructions_{count}', medication['instructions'])
+                count += 1
+            
+            # Fill Vital Signs
+            await page.fill('#blood_pressure', data['clinical_info']['vital_signs']['blood_pressure'])
+            await page.fill('#heart_rate', data['clinical_info']['vital_signs']['heart_rate'])
+            await page.fill('#temperature', data['clinical_info']['vital_signs']['temperature'])
+            
+            # Fill Date of Service with today's date
+            await page.fill('#date_of_service', data['date_of_service'])
+            await page.fill('#additional_notes', data['additional_notes'])
 
-        )
-
-        await agent.run()
-        await asyncio.sleep(10)
+            # Wait for a moment to see the filled form
+            await asyncio.sleep(20)
+            
+            # Close the browser
+            await browser.close()
 
 
 async def main():
